@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Calculator</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6 mx-auto">
+                <div class="card mt-4">
+                    <div class="card-body">
+                        <form action="#" id="calcc">
+                            <h4 class="card-title text-center">Nova Scotia</h4>
+                            <div class="form-group row">
+                                <label for="amb" class="col-sm-6 col-form-label">Average Monthly Bill</label>
+                                <div class="col-sm-6">
+                                    <div class="input-group mb-2">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text">$</div>
+                                        </div>
+                                        <input step="any" type="number" class="form-control" id="amb" required>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="form-group row">
+                                <label for="syssize" class="col-sm-6 col-form-label">System Size (KWdc)</label>
+                                <div class="col-sm-6">
+                                    <input step="any" type="number" class="form-control" id="syssize" required>
+                                </div>
+                            </div>
+                            <div id="show" style="display: none;">
+                                <div class="form-group row">
+                                    <label for="syssize" class="col-sm-6 col-form-label">Electricity Offset
+                                        Percentage</label>
+                                    <div class="col-sm-6">
+                                        <div class="input-group mb-2">
+                                            <input type="number" readonly class="form-control" id="eoffset">
+                                            <div class="input-group-append">
+                                                <div class="input-group-text">%</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="syssize" class="col-sm-6 col-form-label">Saving an average of</label>
+
+                                    <div class="col-sm-6">
+                                        <div class="input-group mb-2">
+                                            <input type="number" readonly class="form-control" id="savg">
+                                            <div class="input-group-append">
+                                                <div class="input-group-text">%</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label for="syssize" class="col-sm-6 col-form-label">System Cost</label>
+
+                                    <div class="col-sm-6">
+                                        <div class="input-group mb-2">
+                                            <div class="input-group-prepend">
+                                                <div class="input-group-text">$</div>
+                                            </div>
+                                            <input type="number" readonly class="form-control" id="syscost">
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div class="form-group row">
+                                    <label for="syssize" class="col-sm-6 col-form-label">Total Saving 25 Years</label>
+
+                                    <div class="col-sm-6">
+                                        <div class="input-group mb-2">
+                                            <div class="input-group-prepend">
+                                                <div class="input-group-text">$</div>
+                                            </div>
+                                            <input type="number" readonly class="form-control" id="totalsav">
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div class="form-group row">
+                                    <label for="syssize" class="col-sm-6 col-form-label">Electricity Cost 25
+                                        Year</label>
+
+                                    <div class="col-sm-6">
+                                        <div class="input-group mb-2">
+                                            <div class="input-group-prepend">
+                                                <div class="input-group-text">$</div>
+                                            </div>
+                                            <input type="number" readonly class="form-control" id="eleccost">
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <button href="#" type="submit" class="card-link btn btn-primary float-right"
+                                id="calc">Calculate</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <canvas id="myChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+
+    <script>
+        $(document).ready(function () {
+            $("#amb").on('input change', function(){
+                $("#syssize").val(parseFloat(((((parseFloat($("#amb").val())/1.09525)-10.83)/0.15805)/1000)*12).toFixed(2));
+            })
+            $("#calc").on('click', function () {
+                $("#calcc").submit(function (event) {
+                    event.preventDefault();
+                    $('#show').show();
+                    var avg_m_bill = parseFloat($("#amb").val());
+                    var real_kw = parseFloat(((((avg_m_bill/1.09525)-10.83)/0.15805)/1000)*12).toFixed(2);
+                    var avg_a_bill = avg_m_bill * 12;
+                    var fixed_a_bill = 10.83 * 12;
+                    var hydro_rate = 0.156;
+                    var annual_con = (avg_a_bill - fixed_a_bill) / hydro_rate;
+                    var sys_size = parseFloat($("#syssize").val());
+                    var unit_price = unitPrice(sys_size);
+                    var solar_sys_cost = sys_size * unit_price * 1000;
+                    var sales_tax_rate = 15;
+                    var rebate = 0.6 + 0.15;
+                    var total_rebate = sys_size * rebate * 1000;
+                    var acp = 0.156;
+                    var efficacy = 1100;
+                    var first_year_p = sys_size * efficacy;
+                    var first_year_s = acp * first_year_p;
+                    var electricity_offset = $("#eoffset").val(parseFloat((first_year_p /
+                            annual_con) * 100)
+                        .toFixed(0));
+
+                    var sys_cost = $("#syscost").val(solar_sys_cost);
+                    var totalsaving25 = sum(totalSaving((-solar_sys_cost * (1 + (
+                            sales_tax_rate / 100)) +
+                        total_rebate), (first_year_s * (1 + (sales_tax_rate /
+                        100)))))
+                    var total_saving_25 = $("#totalsav").val(totalsaving25);
+                    var elecost25 = sum(totalCost((-solar_sys_cost * (1 + (
+                            sales_tax_rate / 100)) +
+                        total_rebate), (avg_a_bill + fixed_a_bill)));
+                    var elec_cost_25 = $("#eleccost").val(elecost25);
+                    var saving_avg = $("#savg").val(parseFloat((totalsaving25 / elecost25) *
+                            100)
+                        .toFixed(0));
+
+                    var year = totalSaving((-solar_sys_cost * (1 + (
+                            sales_tax_rate / 100)) +
+                        total_rebate), (first_year_s * (1 + (sales_tax_rate / 100))));
+                    var year20 = (-solar_sys_cost * (1 + (
+                            sales_tax_rate / 100)) +
+                        total_rebate);
+                    var year25 = parseFloat(year20 + year.year0 + year.year1 + year.year2 + year
+                        .year3 +
+                        year
+                        .year4).toFixed(2);
+                    var year30 = parseFloat(year20 + year.year0 + year.year1 + year.year2 + year
+                            .year3 +
+                            year
+                            .year4 + year.year5 + year.year6 + year.year7 + year.year8 + year
+                            .year9)
+                        .toFixed(2);
+                    var year35 = parseFloat(year20 + year.year0 + year.year1 + year.year2 + year
+                            .year3 +
+                            year
+                            .year4 + year.year5 + year.year6 + year.year7 + year.year8 + year
+                            .year9 +
+                            year
+                            .year10 + year.year11 + year.year12 + year.year13 + year.year14)
+                        .toFixed(2);
+                    var year40 = parseFloat(year20 + year.year0 + year.year1 + year.year2 + year
+                        .year3 +
+                        year
+                        .year4 + year.year5 + year.year6 + year.year7 + year.year8 + year
+                        .year9 + year
+                        .year10 + year.year11 + year.year12 + year.year13 + year.year14 +
+                        year.year15 +
+                        year
+                        .year16 + year.year17 + year.year18 + year.year19).toFixed(2);
+                    var year45 = parseFloat(year20 + year.year0 + year.year1 + year.year2 + year
+                        .year3 +
+                        year
+                        .year4 + year.year5 + year.year6 + year.year7 + year.year8 + year
+                        .year9 + year
+                        .year10 + year.year11 + year.year12 + year.year13 + year.year14 +
+                        year.year15 +
+                        year
+                        .year16 + year.year17 + year.year18 + year.year19 + year.year20 +
+                        year.year21 +
+                        year
+                        .year22 + year.year23 + year.year24).toFixed(2);
+                    var ctx = document.getElementById('myChart').getContext('2d');
+                    var chart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: ['2020', '2025', '2030', '2035', '2040', '2045'],
+                            datasets: [{
+                                label: 'Net Saving',
+                                backgroundColor: '#52adf3',
+                                borderColor: '#52adf3',
+                                data: [year20, year25, year30, year35, year40,
+                                    year45
+                                ]
+                            }]
+                        },
+                        options: {
+                            legend: {
+                                display: false
+                            },
+                            title: {
+                                display: true,
+                                text: 'Payback Period (With Rebate & HST)'
+                            }
+
+                        }
+                    });
+                });
+
+
+            });
+
+            function totalSaving(cost, saving) {
+                var i;
+                var year = {};
+                for (i = 0; i < 25; i++) {
+                    if (i == 0) {
+                        year["year" + i] = saving;
+                    } else {
+                        year["year" + i] = year["year" + (i - 1)] * (1 + 0.04);
+                    }
+                }
+                return year;
+            }
+
+            function sum(obj) {
+                var sum = 0;
+                for (var el in obj) {
+                    if (obj.hasOwnProperty(el)) {
+                        sum += parseFloat(obj[el]);
+                    }
+                }
+                return sum.toFixed(2);
+            }
+
+            function totalCost(cost, elecCost) {
+                var i;
+                var year = {};
+                for (i = 0; i < 25; i++) {
+                    if (i == 0) {
+                        year["year" + i] = elecCost;
+                    } else {
+                        year["year" + i] = year["year" + (i - 1)] * (1 + 0.04);
+                    }
+                }
+                return year;
+            }
+
+            function unitPrice(unit) {
+                if (unit > 0.0001 && unit <= 5.0000) {
+                    return 2.85;
+                } else if (unit > 5.0001 && unit <= 6.0000) {
+                    return 2.8;
+                } else if (unit > 6.0001 && unit <= 7.0000) {
+                    return 2.75;
+                } else if (unit > 7.0001 && unit <= 8.0000) {
+                    return 2.7;
+                } else if (unit > 8.0001 && unit <= 9.0000) {
+                    return 2.65;
+                } else if (unit > 9.0001 && unit <= 10.0000) {
+                    return 2.6;
+                } else if (unit > 10.0001 && unit <= 15.0000) {
+                    return 2.6;
+                } else if (unit > 15.0001 && unit <= 20.0000) {
+                    return 2.6;
+                } else if (unit > 20.0001 && unit <= 25.0000) {
+                    return 2.6;
+                } else if (unit > 25.0001 && unit <= 30.0000) {
+                    return 2.6;
+                } else if (unit > 30.0001 && unit <= 35.0000) {
+                    return 2.55;
+                } else if (unit > 35.0001 && unit <= 40.0000) {
+                    return 2.525;
+                } else if (unit > 40.0001 && unit <= 45.0000) {
+                    return 2.5;
+                } else if (unit > 45.0001 && unit <= 50.0000) {
+                    return 2.475;
+                } else if (unit > 50.0001 && unit <= 55.0000) {
+                    return 2.45;
+                } else if (unit > 55.0001 && unit <= 60.0000) {
+                    return 2.425;
+                } else if (unit > 60.0001 && unit <= 65.0000) {
+                    return 2.4;
+                } else if (unit > 65.0001 && unit <= 70.0000) {
+                    return 2.375;
+                } else if (unit > 70.0001 && unit <= 75.0000) {
+                    return 2.35;
+                } else if (unit > 75.0001 && unit <= 80.0000) {
+                    return 2.325;
+                } else if (unit > 80.0001 && unit <= 85.0000) {
+                    return 2.3;
+                } else if (unit > 85.0001 && unit <= 90.0000) {
+                    return 2.275;
+                } else if (unit > 90.0001 && unit <= 95.0000) {
+                    return 2.25;
+                } else if (unit > 95.0001 && unit <= 100.0000) {
+                    return 2.225;
+                }
+            }
+
+
+        });
+    </script>
+
+</body>
+
+</html>
